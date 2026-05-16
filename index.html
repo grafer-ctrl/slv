@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>XAG/USD SILVER REAL SIGNAL PRO</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    padding:20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.header h1{
+    font-size:34px;
+    color:#38bdf8;
+}
+
+.header p{
+    color:#94a3b8;
+    margin-top:8px;
+}
+
+.api-box{
+    background:#1e293b;
+    padding:15px;
+    border-radius:14px;
+    margin-bottom:20px;
+}
+
+.api-box input{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#0f172a;
+    color:white;
+    font-size:15px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#1e293b;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 0 20px rgba(0,0,0,0.25);
+}
+
+.tf{
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:12px;
+    color:#38bdf8;
+}
+
+.price{
+    font-size:30px;
+    color:#facc15;
+    margin-bottom:12px;
+}
+
+.info{
+    margin-bottom:8px;
+    color:#cbd5e1;
+    font-size:14px;
+}
+
+.signal{
+    margin-top:15px;
+    padding:12px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.buy{
+    background:#16a34a;
+}
+
+.sell{
+    background:#dc2626;
+}
+
+.neutral{
+    background:#475569;
+}
+
+.summary{
+    margin-top:30px;
+    background:#1e293b;
+    padding:25px;
+    border-radius:16px;
+}
+
+.summary h2{
+    margin-bottom:15px;
+    color:#38bdf8;
+}
+
+.big{
+    font-size:38px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.buyText{
+    color:#22c55e;
+}
+
+.sellText{
+    color:#ef4444;
+}
+
+.neutralText{
+    color:#94a3b8;
+}
+
+.footer{
+    margin-top:20px;
+    text-align:center;
+    color:#64748b;
+    font-size:13px;
+}
+
+button{
+    margin-top:12px;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#38bdf8;
+    color:#0f172a;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+@media(max-width:600px){
+
+    .header h1{
+        font-size:26px;
+    }
+
+    .price{
+        font-size:24px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>XAG/USD SILVER REAL SIGNAL PRO</h1>
+        <p>Realtime Silver Analysis • EMA • RSI • Multi Timeframe</p>
+    </div>
+
+    <div class="api-box">
+        <input type="text" id="apikey" placeholder="8cd5e84fa4564322b907aaddac29b059">
+        <button onclick="saveApi()">SAVE API KEY</button>
+    </div>
+
+    <div class="grid" id="cards"></div>
+
+    <div class="summary">
+        <h2>Kesimpulan Multi Timeframe</h2>
+
+        <div id="summaryText">
+            Menunggu analisa...
+        </div>
+
+        <div class="big neutralText" id="bigSignal">
+            ANALYZING...
+        </div>
+    </div>
+
+    <div class="footer">
+        Data by TwelveData Free API
+    </div>
+
+</div>
+
+<script>
+
+const timeframes = [
+    {tf:"5min", label:"5 MIN"},
+    {tf:"15min", label:"15 MIN"},
+    {tf:"30min", label:"30 MIN"},
+    {tf:"1h", label:"1 HOUR"},
+    {tf:"4h", label:"4 HOUR"},
+    {tf:"1day", label:"1 DAY"}
+];
+
+const cards = document.getElementById("cards");
+
+function createCards(){
+
+    cards.innerHTML = "";
+
+    timeframes.forEach(item => {
+
+        cards.innerHTML += `
+        
+        <div class="card">
+
+            <div class="tf">${item.label}</div>
+
+            <div class="price" id="price-${item.tf}">
+                Loading...
+            </div>
+
+            <div class="info" id="ema-${item.tf}">
+                EMA Trend: ...
+            </div>
+
+            <div class="info" id="rsi-${item.tf}">
+                RSI: ...
+            </div>
+
+            <div class="info" id="trend-${item.tf}">
+                Trend: ...
+            </div>
+
+            <div class="signal neutral" id="signal-${item.tf}">
+                ANALYZE
+            </div>
+
+        </div>
+        
+        `;
+
+    });
+
+}
+
+createCards();
+
+function saveApi(){
+
+    const key = document.getElementById("apikey").value;
+
+    localStorage.setItem("xag_api", key);
+
+    alert("API KEY SAVED");
+
+    analyzeAll();
+
+}
+
+document.getElementById("apikey").value =
+localStorage.getItem("xag_api") || "";
+
+async function getData(interval){
+
+    const apiKey = localStorage.getItem("xag_api");
+
+    if(!apiKey){
+
+        alert("Masukkan API KEY dahulu");
+
+        throw new Error("NO API");
+
+    }
+
+    const url =
+`https://api.twelvedata.com/time_series?symbol=XAG/USD&interval=${interval}&outputsize=200&apikey=${apiKey}`;
+
+    const response = await fetch(url);
+
+    const data = await response.json();
+
+    if(!data.values){
+
+        throw new Error("API ERROR");
+
+    }
+
+    return data.values
+        .reverse()
+        .map(v => parseFloat(v.close));
+
+}
+
+function calculateEMA(data, period){
+
+    const k = 2 / (period + 1);
+
+    let ema = [data[0]];
+
+    for(let i=1;i<data.length;i++){
+
+        ema.push(
+            data[i] * k + ema[i-1] * (1-k)
+        );
+
+    }
+
+    return ema;
+
+}
+
+function calculateRSI(data, period = 14){
+
+    let gains = 0;
+    let losses = 0;
+
+    for(let i=1;i<=period;i++){
+
+        let diff = data[data.length-period+i-1]
+            - data[data.length-period+i-2];
+
+        if(diff >= 0){
+            gains += diff;
+        }else{
+            losses += Math.abs(diff);
+        }
+
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+
+    if(avgLoss === 0) return 100;
+
+    const rs = avgGain / avgLoss;
+
+    return 100 - (100 / (1 + rs));
+
+}
+
+async function analyzeAll(){
+
+    let buyCount = 0;
+    let sellCount = 0;
+
+    for(const item of timeframes){
+
+        try{
+
+            const closes = await getData(item.tf);
+
+            const price = closes[closes.length - 1];
+
+            const ema50 =
+                calculateEMA(closes,50).pop();
+
+            const ema200 =
+                calculateEMA(closes,200).pop();
+
+            const rsi =
+                calculateRSI(closes);
+
+            let signal = "NEUTRAL";
+            let signalClass = "neutral";
+            let trend = "SIDEWAYS";
+
+            if(price > ema50 && ema50 > ema200){
+
+                trend = "BULLISH";
+
+                if(rsi < 70){
+
+                    signal = "BUY";
+                    signalClass = "buy";
+                    buyCount++;
+
+                }
+
+            }
+            else if(price < ema50 && ema50 < ema200){
+
+                trend = "BEARISH";
+
+                if(rsi > 30){
+
+                    signal = "SELL";
+                    signalClass = "sell";
+                    sellCount++;
+
+                }
+
+            }
+
+            document.getElementById(`price-${item.tf}`)
+                .innerText = "$" + price.toFixed(3);
+
+            document.getElementById(`ema-${item.tf}`)
+                .innerText =
+                `EMA50 ${ema50.toFixed(2)} | EMA200 ${ema200.toFixed(2)}`;
+
+            document.getElementById(`rsi-${item.tf}`)
+                .innerText =
+                `RSI ${rsi.toFixed(2)}`;
+
+            document.getElementById(`trend-${item.tf}`)
+                .innerText =
+                `Trend ${trend}`;
+
+            const signalBox =
+                document.getElementById(`signal-${item.tf}`);
+
+            signalBox.innerText = signal;
+
+            signalBox.className =
+                `signal ${signalClass}`;
+
+        }catch(err){
+
+            console.log(err);
+
+        }
+
+    }
+
+    let finalSignal = "NEUTRAL";
+    let finalClass = "neutralText";
+    let finalText = "Market masih belum memiliki arah dominan.";
+
+    if(buyCount >= 4){
+
+        finalSignal = "STRONG BUY";
+        finalClass = "buyText";
+        finalText = "Mayoritas timeframe bullish.";
+
+    }
+    else if(sellCount >= 4){
+
+        finalSignal = "STRONG SELL";
+        finalClass = "sellText";
+        finalText = "Mayoritas timeframe bearish.";
+
+    }
+
+    document.getElementById("summaryText")
+        .innerText = finalText;
+
+    const big =
+        document.getElementById("bigSignal");
+
+    big.innerText = finalSignal;
+
+    big.className =
+        `big ${finalClass}`;
+
+}
+
+analyzeAll();
+
+setInterval(analyzeAll, 30000);
+
+</script>
+
+</body>
+</html>
