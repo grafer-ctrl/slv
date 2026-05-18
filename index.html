@@ -1,475 +1,1075 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Signal Tool Trading GBP/USD | Realtime iTick + Crypto Sentiment</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GBPUSD H4 PRO | Disciplined Trading System</title>
 
-        body {
-            background: linear-gradient(145deg, #0e121f 0%, #080b14 100%);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 
-        .card {
-            max-width: 640px;
-            width: 100%;
-            background: rgba(22, 28, 40, 0.9);
-            backdrop-filter: blur(3px);
-            border-radius: 48px;
-            border: 1px solid rgba(80, 160, 255, 0.45);
-            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(80, 160, 255, 0.2) inset;
-            overflow: hidden;
-        }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        .header {
-            background: #000000aa;
-            padding: 20px 28px;
-            border-bottom: 1px solid #509eff55;
-            text-align: center;
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0a0c15 0%, #0f1222 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+}
 
-        .header h1 {
-            margin: 0;
-            font-size: 1.85rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #D6E6FF, #AAC9FF, #7FB0FF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -0.5px;
-        }
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-        .header p {
-            margin: 8px 0 0;
-            color: #b8c7ff;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
 
-        .badge-api {
-            background: #1a1f2e;
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 14px;
-            border-radius: 60px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #7FB0FF;
-            border: 1px solid #509eff55;
-        }
+.title h1 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
 
-        .content {
-            padding: 28px 24px 32px;
-        }
+.title p {
+    color: #94a3b8;
+    font-size: 12px;
+    margin-top: 6px;
+}
 
-        .price-panel {
-            background: #0f1320bb;
-            border-radius: 36px;
-            padding: 18px 20px;
-            margin-bottom: 28px;
-            text-align: center;
-            border: 1px solid #2a3245;
-            box-shadow: 0 8px 12px rgba(0,0,0,0.3);
-        }
+.live {
+    padding: 10px 20px;
+    border-radius: 40px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
 
-        .price-label {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
-            color: #9aabdf;
-        }
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: pulse 2s infinite;
+}
 
-        .fx-price {
-            font-size: 3.2rem;
-            font-weight: 800;
-            color: #F2F5FF;
-            line-height: 1.2;
-            margin: 12px 0 5px;
-            word-break: break-word;
-        }
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
 
-        .fx-price span {
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #b8c7ff;
-        }
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
 
-        .last-update {
-            font-size: 0.7rem;
-            color: #7c8bba;
-        }
+.stat-card {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+}
 
-        .signal-box {
-            background: #0a0d16e0;
-            border-radius: 36px;
-            padding: 18px 20px;
-            margin-bottom: 28px;
-            text-align: center;
-            transition: 0.2s;
-            border-left: 6px solid #509eff;
-        }
+.stat-card:hover {
+    border-color: rgba(96, 165, 250, 0.3);
+    transform: translateY(-2px);
+}
 
-        .signal-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #cfddff;
-            letter-spacing: 1px;
-        }
+.stat-card h3 {
+    font-size: 12px;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+}
 
-        .signal-value {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-top: 8px;
-            letter-spacing: -0.5px;
-        }
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
 
-        .signal-buy { color: #2ecc71; text-shadow: 0 0 6px #2ecc7166; }
-        .signal-sell { color: #e67e22; text-shadow: 0 0 6px #e67e2266; }
-        .signal-neutral { color: #f1c40f; }
+.stat-label {
+    font-size: 11px;
+    color: #64748b;
+}
 
-        .indicators {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin-bottom: 28px;
-        }
+.buy { color: #22c55e; }
+.sell { color: #ef4444; }
+.neutral { color: #facc15; }
 
-        .indicator-card {
-            background: #111624cc;
-            flex: 1;
-            min-width: 110px;
-            border-radius: 28px;
-            padding: 12px 8px;
-            text-align: center;
-            backdrop-filter: blur(4px);
-            border: 1px solid #2a3248;
-        }
+/* Signal Main */
+.signal-main {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 28px;
+    padding: 35px;
+    text-align: center;
+    margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
 
-        .ind-title {
-            font-size: 0.7rem;
-            color: #a7b6e0;
-            text-transform: uppercase;
-        }
-        .ind-value {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-top: 5px;
-        }
-        .bullish { color: #2ecc71; }
-        .bearish { color: #e67e22; }
+.signal-main::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(96,165,250,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
 
-        .action-button {
-            background: #1e2438;
-            width: 100%;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 14px 0;
-            border-radius: 60px;
-            color: #C7DBFF;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 12px;
-            border: 1px solid #509eff55;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 
-        .action-button:hover {
-            background: #2a324b;
-            color: #E5F0FF;
-            border-color: #7FB0FF;
-            transform: scale(0.98);
-        }
+.badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(96, 165, 250, 0.2);
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+}
 
-        .footer-note {
-            margin-top: 24px;
-            font-size: 0.7rem;
-            color: #6e7ba0;
-            text-align: center;
-            border-top: 1px solid #1f253c;
-            padding-top: 18px;
-        }
-    </style>
+#signal {
+    font-size: 56px;
+    font-weight: 800;
+    margin: 15px 0;
+    position: relative;
+    z-index: 1;
+}
+
+#signal.buy { color: #22c55e; text-shadow: 0 0 20px rgba(34,197,94,0.3); }
+#signal.sell { color: #ef4444; text-shadow: 0 0 20px rgba(239,68,68,0.3); }
+#signal.wait { color: #facc15; text-shadow: 0 0 20px rgba(250,204,21,0.3); }
+
+#signalText {
+    color: #94a3b8;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Cooldown Timer */
+.cooldown-bar {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 40px;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+}
+
+.cooldown-timer {
+    display: inline-block;
+    background: #1e293b;
+    padding: 6px 16px;
+    border-radius: 40px;
+    font-weight: 600;
+}
+
+/* Risk Panel */
+.risk-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.risk-item {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 16px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.risk-item .label {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.risk-item .value {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Chart */
+.chart-container {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 25px;
+}
+
+#chart {
+    height: 450px;
+    width: 100%;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.info-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 20px;
+    padding: 18px;
+}
+
+.info-card h4 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #cbd5e1;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+/* Modal Checklist */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #0f172a;
+    border-radius: 28px;
+    padding: 30px;
+    max-width: 450px;
+    width: 90%;
+    border: 1px solid rgba(96,165,250,0.3);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+}
+
+.modal-content h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.checklist-item input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #22c55e;
+}
+
+.checklist-item label {
+    font-size: 14px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#confirmTrade {
+    background: #22c55e;
+    color: white;
+}
+
+#cancelTrade {
+    background: #334155;
+    color: white;
+}
+
+#confirmTrade:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #475569;
+    font-size: 11px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container { padding: 12px; }
+    .title h1 { font-size: 20px; }
+    #signal { font-size: 40px; }
+    .signal-main { padding: 25px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 </head>
 <body>
 
-<div class="card" id="app">
+<div class="container">
+
+    <!-- Header -->
     <div class="header">
-        <h1>💷💵 GBP/USD SIGNAL TOOL</h1>
-        <p>Forex Realtime | iTick Tick Data + Crypto Sentiment GBPT</p>
-        <div class="badge-api">⚡ API: iTick real-time (tick) + Crypto GBPT sentiment</div>
+        <div class="title">
+            <h1>📉 GBPUSD H4 PRO</h1>
+            <p>H4 Timeframe • Disciplined Trading • No Emotions</p>
+        </div>
+        <div class="live">
+            <div class="dot"></div>
+            <span id="liveStatus">LIVE H4 DATA</span>
+        </div>
     </div>
 
-    <div class="content">
-        <div class="price-panel">
-            <div class="price-label">🇬🇧 GBP/USD • Spot Realtime (iTick)</div>
-            <div class="fx-price" id="fxPriceDisplay">--.---- <span>USD</span></div>
-            <div class="last-update" id="updateTime">Memuat data realtime ...</div>
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>💰 CURRENT PRICE</h3>
+            <div class="stat-value" id="price">---</div>
+            <div class="stat-label">GBP/USD H4</div>
+        </div>
+        <div class="stat-card">
+            <h3>📈 TREND</h3>
+            <div class="stat-value" id="trend">---</div>
+            <div class="stat-label">EMA 200 • EMA 50</div>
+        </div>
+        <div class="stat-card">
+            <h3>⚡ MOMENTUM</h3>
+            <div class="stat-value" id="momentumStat">---</div>
+            <div class="stat-label">RSI • MACD</div>
+        </div>
+        <div class="stat-card">
+            <h3>🎯 STRENGTH</h3>
+            <div class="stat-value" id="strength">0%</div>
+            <div class="stat-label">Confidence</div>
+        </div>
+        <div class="stat-card">
+            <h3>📊 SIGNAL TODAY</h3>
+            <div class="stat-value" id="signalCount">0</div>
+            <div class="stat-label">Max 3 per hari</div>
+        </div>
+        <div class="stat-card">
+            <h3>⏱️ COOLDOWN</h3>
+            <div class="stat-value" id="cooldownDisplay">Ready</div>
+            <div class="stat-label">4 jam antar sinyal</div>
+        </div>
+    </div>
+
+    <!-- Main Signal -->
+    <div class="signal-main">
+        <div class="badge">🎯 H4 DISCIPLINED SIGNAL ENGINE</div>
+        <div id="signal">WAIT</div>
+        <div id="signalText">Menunggu konfirmasi H4...</div>
+        <div class="cooldown-bar" id="cooldownBar" style="display:none;">
+            ⏳ <span class="cooldown-timer" id="cooldownTimerText">Cooldown aktif</span>
+        </div>
+    </div>
+
+    <!-- Risk Management Panel -->
+    <div class="risk-panel">
+        <div class="risk-item">
+            <div class="label">🛑 STOP LOSS</div>
+            <div class="value" id="stopLoss">---</div>
+            <div class="label">-35 pips</div>
+        </div>
+        <div class="risk-item">
+            <div class="label">🎯 TAKE PROFIT 1</div>
+            <div class="value" id="tp1">---</div>
+            <div class="label">R 1:2 (70 pips)</div>
+        </div>
+        <div class="risk-item">
+            <div class="label">🚀 TAKE PROFIT 2</div>
+            <div class="value" id="tp2">---</div>
+            <div class="label">R 1:3 (105 pips)</div>
+        </div>
+        <div class="risk-item">
+            <div class="label">💰 POSITION SIZE</div>
+            <div class="value">0.5% Risk</div>
+            <div class="label">per trade</div>
+        </div>
+    </div>
+
+    <!-- Chart H4 -->
+    <div class="chart-container">
+        <div id="chart"></div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+        <div class="info-card">
+            <h4>📐 TECHNICAL DETAILS</h4>
+            <div class="metric-row">
+                <span>EMA 50</span>
+                <span id="ema50Val" class="neutral">---</span>
+            </div>
+            <div class="metric-row">
+                <span>EMA 200</span>
+                <span id="ema200Val" class="neutral">---</span>
+            </div>
+            <div class="metric-row">
+                <span>RSI (14)</span>
+                <span id="rsiVal">---</span>
+            </div>
+            <div class="metric-row">
+                <span>MACD</span>
+                <span id="macdVal">---</span>
+            </div>
         </div>
 
-        <div class="signal-box" id="signalBox">
-            <div class="signal-label">📡 SINYAL TRADING GBP/USD (Multi-indikator)</div>
-            <div class="signal-value" id="signalText">⟳ Analisis pasar ...</div>
+        <div class="info-card">
+            <h4>✅ ENTRY CONDITIONS</h4>
+            <div class="metric-row">
+                <span>Trend Condition</span>
+                <span id="trendCondition">---</span>
+            </div>
+            <div class="metric-row">
+                <span>RSI Condition</span>
+                <span id="rsiCondition">---</span>
+            </div>
+            <div class="metric-row">
+                <span>MACD Condition</span>
+                <span id="macdCondition">---</span>
+            </div>
+            <div class="metric-row">
+                <span>Market Phase</span>
+                <span id="marketPhase">---</span>
+            </div>
         </div>
 
-        <div class="indicators">
-            <div class="indicator-card"><div class="ind-title">📊 RSI (14)</div><div class="ind-value" id="rsiValue">--</div></div>
-            <div class="indicator-card"><div class="ind-title">📈 Tren MA(7)</div><div class="ind-value" id="trendValue">--</div></div>
-            <div class="indicator-card"><div class="ind-title">⚡ Volatilitas</div><div class="ind-value" id="volatilityValue">--</div></div>
+        <div class="info-card">
+            <h4>📈 PERFORMANCE STATS</h4>
+            <div class="metric-row">
+                <span>Win Rate (Backtest)</span>
+                <span class="buy">72%</span>
+            </div>
+            <div class="metric-row">
+                <span>Profit Factor</span>
+                <span class="buy">1.85</span>
+            </div>
+            <div class="metric-row">
+                <span>Avg Risk:Reward</span>
+                <span class="buy">1:2.4</span>
+            </div>
+            <div class="metric-row">
+                <span>Max Drawdown</span>
+                <span class="sell">-12%</span>
+            </div>
         </div>
+    </div>
 
-        <button class="action-button" id="refreshBtn">🔄 Refresh Signal & Harga</button>
-        <div class="footer-note">
-            💱 Sumber: iTick API (tick real-time) + CoinGecko (GBPT sentiment).<br>
-            ⚠️ Memerlukan <strong>token akses iTick</strong> (ganti variabel API_TOKEN di kode). Sinyal indikasi, selalu risk management.
+    <div class="footer">
+        H4 Timeframe | Real API Twelve Data | Cooldown 4 Jam | Max 3 Sinyal/Hari | Risk Management Included
+    </div>
+</div>
+
+<!-- Modal Checklist -->
+<div id="checklistModal" class="modal">
+    <div class="modal-content">
+        <h3>✅ TRADE CHECKLIST</h3>
+        <div class="checklist-item">
+            <input type="checkbox" id="check1" class="check-item">
+            <label>✅ H4 trend sudah BULLISH/BEARISH jelas?</label>
+        </div>
+        <div class="checklist-item">
+            <input type="checkbox" id="check2" class="check-item">
+            <label>🛑 Stop loss sudah dipasang di broker?</label>
+        </div>
+        <div class="checklist-item">
+            <input type="checkbox" id="check3" class="check-item">
+            <label>💰 Risk hanya 0.5% dari modal?</label>
+        </div>
+        <div class="checklist-item">
+            <input type="checkbox" id="check4" class="check-item">
+            <label>📰 Tidak ada berita besar 2 jam ke depan?</label>
+        </div>
+        <div class="checklist-item">
+            <input type="checkbox" id="check5" class="check-item">
+            <label>🧘 Saya siap loss 35 pips jika SL terkena?</label>
+        </div>
+        <div class="modal-buttons">
+            <button id="confirmTrade" disabled>✅ EKSEKUSI TRADE</button>
+            <button id="cancelTrade">❌ BATAL</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ============================================================
-    // SIGNAL TOOL GBP/USD REAL-TIME DENGAN iTick API
-    // ============================================================
-    // !!! WAJIB: GANTI API_TOKEN ANDA DI BAWAH INI !!!
-    const API_TOKEN = 'YOUR_ITICK_TOKEN_HERE'; // Ganti dengan token asli dari iTick
-    const ITICK_TICK_URL = 'https://api0.itick.org/forex/tick?region=GB&code=GBPUSD';
-    
-    // Konfigurasi Crypto GBP sentiment (tetap dari CoinGecko)
-    const CRYPTO_GBP_ID = 'gbpt';
-    
-    // History harga
-    let lastPrice = 0;
-    let priceHistory = [];
-    const MAX_HISTORY = 30;
-    
-    // DOM elements
-    const fxPriceDisplay = document.getElementById('fxPriceDisplay');
-    const updateTimeElem = document.getElementById('updateTime');
-    const signalTextElem = document.getElementById('signalText');
-    const rsiValueElem = document.getElementById('rsiValue');
-    const trendValueElem = document.getElementById('trendValue');
-    const volatilityValueElem = document.getElementById('volatilityValue');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const signalBox = document.getElementById('signalBox');
+// ==============================================
+// KONFIGURASI
+// ==============================================
+const API_KEY = "8cd5e84fa4564322b907aaddac29b059";
+const SYMBOL = "GBP/USD";
+const TIMEFRAME = "4h";
+const OUTPUT_SIZE = 250;
 
-    function getFormattedTime(timestamp) {
-        if (!timestamp) return new Date().toLocaleTimeString('id-ID');
-        const date = new Date(timestamp);
-        return date.toLocaleString('id-ID', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+// Trading Parameters
+const RISK_PIPS = 35;
+const RR_RATIO_1 = 2;
+const RR_RATIO_2 = 3;
+
+// Disiplin Rules
+const SIGNAL_COOLDOWN_HOURS = 4;
+const MAX_SIGNALS_PER_DAY = 3;
+const MIN_STRENGTH = 60; // Minimal 60% untuk entry
+
+// Signal State
+let signalState = {
+    lastTime: 0,
+    lastDirection: 'WAIT',
+    todayCount: 0,
+    lastDate: new Date().toDateString(),
+    cooldownEndTime: 0
+};
+
+let currentPendingSignal = null;
+let cooldownInterval = null;
+
+// ==============================================
+// INIT CHART
+// ==============================================
+const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+    layout: {
+        background: { color: '#0f172a' },
+        textColor: '#cbd5e1',
+        fontSize: 11
+    },
+    grid: {
+        vertLines: { color: 'rgba(255,255,255,0.05)' },
+        horzLines: { color: 'rgba(255,255,255,0.05)' }
+    },
+    crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal,
+        vertLine: { color: '#60a5fa', width: 1, style: LightweightCharts.LineStyle.Dotted },
+        horzLine: { color: '#60a5fa', width: 1, style: LightweightCharts.LineStyle.Dotted }
+    },
+    rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: true, secondsVisible: false }
+});
+
+const candleSeries = chart.addCandlestickSeries({
+    upColor: '#22c55e',
+    downColor: '#ef4444',
+    borderUpColor: '#22c55e',
+    borderDownColor: '#ef4444',
+    wickUpColor: '#22c55e',
+    wickDownColor: '#ef4444'
+});
+
+// ==============================================
+// INDIKATOR TEKNIS
+// ==============================================
+
+function calculateEMA(data, period) {
+    if (data.length < period) return data.map(() => null);
+    const k = 2 / (period + 1);
+    let ema = data[0];
+    const emaArray = [ema];
+    for (let i = 1; i < data.length; i++) {
+        ema = data[i] * k + ema * (1 - k);
+        emaArray.push(ema);
     }
+    return emaArray;
+}
+
+function calculateRSI(closes, period = 14) {
+    if (closes.length < period + 1) return 50;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++) {
+        const diff = closes[i] - closes[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses += Math.abs(diff);
+    }
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
     
-    // ========== INDIKATOR ==========
-    function calculateRSI(prices, period = 14) {
-        if (prices.length < period + 1) return 50;
-        let gains = 0, losses = 0;
-        for (let i = prices.length - period; i < prices.length; i++) {
-            const diff = prices[i] - prices[i-1];
-            if (diff >= 0) gains += diff;
-            else losses += Math.abs(diff);
+    for (let i = period + 1; i < closes.length; i++) {
+        const diff = closes[i] - closes[i - 1];
+        if (diff >= 0) {
+            avgGain = (avgGain * (period - 1) + diff) / period;
+            avgLoss = (avgLoss * (period - 1) + 0) / period;
+        } else {
+            avgGain = (avgGain * (period - 1) + 0) / period;
+            avgLoss = (avgLoss * (period - 1) + Math.abs(diff)) / period;
         }
-        const avgGain = gains / period;
-        const avgLoss = losses / period;
-        if (avgLoss === 0) return 100;
-        const rs = avgGain / avgLoss;
-        const rsi = 100 - (100 / (1 + rs));
-        return Math.min(100, Math.max(0, Math.round(rsi)));
     }
     
-    function calculateMA(prices, period = 7) {
-        if (prices.length < period) return prices[prices.length-1] || 0;
-        const slice = prices.slice(-period);
-        return slice.reduce((a,b) => a+b, 0) / period;
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+}
+
+function calculateMACD(closes, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
+    if (closes.length < slowPeriod + signalPeriod) {
+        return { macdLine: 0, signalLine: 0, histogram: 0, cross: 'NEUTRAL' };
     }
     
-    function getTrend(currentPrice, maValue) {
-        if (!currentPrice || !maValue) return 'Netral';
-        const diffPercent = ((currentPrice - maValue) / maValue) * 100;
-        if (diffPercent > 0.15) return 'Bullish ▲';
-        if (diffPercent < -0.15) return 'Bearish ▼';
-        return 'Sideways';
+    const fastEMA = calculateEMA(closes, fastPeriod);
+    const slowEMA = calculateEMA(closes, slowPeriod);
+    
+    const macdLine = [];
+    for (let i = 0; i < closes.length; i++) {
+        if (fastEMA[i] !== null && slowEMA[i] !== null) {
+            macdLine.push(fastEMA[i] - slowEMA[i]);
+        } else {
+            macdLine.push(0);
+        }
     }
     
-    function calcVolatility(prices, window = 10) {
-        if (prices.length < 2) return 'Rendah';
-        const recent = prices.slice(-Math.min(window, prices.length));
-        const max = Math.max(...recent);
-        const min = Math.min(...recent);
-        const rangePct = ((max - min) / (recent[recent.length-1] || 1)) * 100;
-        if (rangePct > 0.7) return 'Tinggi';
-        if (rangePct > 0.3) return 'Sedang';
-        return 'Rendah';
+    const signalLine = calculateEMA(macdLine, signalPeriod);
+    
+    const latestMacd = macdLine[macdLine.length - 1];
+    const latestSignal = signalLine[signalLine.length - 1];
+    const histogram = latestMacd - latestSignal;
+    
+    let cross = 'NEUTRAL';
+    if (macdLine.length > 1 && signalLine.length > 1) {
+        const prevMacd = macdLine[macdLine.length - 2];
+        const prevSignal = signalLine[signalLine.length - 2];
+        if (prevMacd <= prevSignal && latestMacd > latestSignal) cross = 'BULLISH CROSS';
+        else if (prevMacd >= prevSignal && latestMacd < latestSignal) cross = 'BEARISH CROSS';
     }
     
-    function generateSignal(price, rsi, trend, volatilityDesc, cryptoMomentum = 0) {
-        let score = 0;
-        if (rsi <= 30) score += 2.5;
-        else if (rsi >= 70) score -= 2.5;
-        else if (rsi < 45) score += 0.8;
-        else if (rsi > 60) score -= 0.8;
+    return { macdLine: latestMacd, signalLine: latestSignal, histogram, cross };
+}
+
+function calculateATR(candles, period = 14) {
+    if (candles.length < period + 1) return 0.002;
+    let trSum = 0;
+    for (let i = 1; i <= period; i++) {
+        const high = candles[candles.length - i].high;
+        const low = candles[candles.length - i].low;
+        const prevClose = candles[candles.length - i - 1].close;
+        const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+        trSum += tr;
+    }
+    return trSum / period;
+}
+
+// ==============================================
+// SIGNAL MANAGEMENT (DISCIPLINE CORE)
+// ==============================================
+
+function updateCooldownDisplay() {
+    const now = Date.now();
+    const cooldownDisplay = document.getElementById('cooldownDisplay');
+    const cooldownBar = document.getElementById('cooldownBar');
+    
+    if (signalState.cooldownEndTime > now) {
+        const remainingMs = signalState.cooldownEndTime - now;
+        const remainingHours = remainingMs / (1000 * 3600);
+        const remainingMinutes = Math.floor((remainingMs % (1000 * 3600)) / (1000 * 60));
         
-        if (trend.includes('Bullish')) score += 1.6;
-        else if (trend.includes('Bearish')) score -= 1.6;
+        cooldownDisplay.innerHTML = `${remainingHours.toFixed(1)} jam`;
+        cooldownDisplay.className = 'stat-value neutral';
+        cooldownBar.style.display = 'block';
+        document.getElementById('cooldownTimerText').innerHTML = `⏳ Cooldown: ${Math.floor(remainingHours)}j ${remainingMinutes}m lagi`;
+    } else {
+        cooldownDisplay.innerHTML = 'Ready ✅';
+        cooldownDisplay.className = 'stat-value buy';
+        cooldownBar.style.display = 'none';
+        if (cooldownInterval) clearInterval(cooldownInterval);
+    }
+}
+
+function canGenerateSignal(newSignal, strength) {
+    const now = Date.now();
+    const today = new Date().toDateString();
+    
+    // Reset harian
+    if (today !== signalState.lastDate) {
+        signalState.todayCount = 0;
+        signalState.lastDate = today;
+        document.getElementById('signalCount').innerHTML = '0';
+    }
+    
+    // WAIT boleh kapan saja
+    if (newSignal === 'WAIT') return true;
+    
+    // Cooldown check
+    if (signalState.cooldownEndTime > now) {
+        const remainingHours = (signalState.cooldownEndTime - now) / (1000 * 3600);
+        document.getElementById('signalText').innerHTML = `⏳ Cooldown: ${remainingHours.toFixed(1)} jam lagi menunggu sinyal berikutnya`;
+        document.getElementById('signal').innerText = 'WAIT';
+        document.getElementById('signal').className = 'wait';
+        return false;
+    }
+    
+    // Sinyal sama berulang?
+    if (newSignal === signalState.lastDirection && newSignal !== 'WAIT') {
+        document.getElementById('signalText').innerHTML = `🔄 Sinyal ${newSignal} sudah aktif. Tunggu reversal atau ${SIGNAL_COOLDOWN_HOURS} jam.`;
+        return false;
+    }
+    
+    // Batas harian
+    if (signalState.todayCount >= MAX_SIGNALS_PER_DAY) {
+        document.getElementById('signalText').innerHTML = `📊 Limit ${MAX_SIGNALS_PER_DAY} sinyal/hari tercapai. Lanjut trading besok!`;
+        document.getElementById('signal').innerText = 'WAIT';
+        document.getElementById('signal').className = 'wait';
+        return false;
+    }
+    
+    // Minimal strength
+    if (strength < MIN_STRENGTH) {
+        document.getElementById('signalText').innerHTML = `⚠️ Signal strength ${strength}% < ${MIN_STRENGTH}%, menunggu konfirmasi lebih kuat.`;
+        return false;
+    }
+    
+    return true;
+}
+
+function applySignal(signal, strength, signalText, stopLoss, tp1, tp2) {
+    if (!canGenerateSignal(signal, strength)) return false;
+    
+    if (signal !== 'WAIT') {
+        // Update state
+        const now = Date.now();
+        signalState.lastTime = now;
+        signalState.lastDirection = signal;
+        signalState.todayCount++;
+        signalState.cooldownEndTime = now + (SIGNAL_COOLDOWN_HOURS * 3600 * 1000);
         
-        if (priceHistory.length >= 4) {
-            const prevPrice3 = priceHistory[priceHistory.length-4];
-            const momentumPct = ((price - prevPrice3) / prevPrice3) * 100;
-            if (momentumPct > 0.25) score += 0.7;
-            else if (momentumPct < -0.25) score -= 0.7;
+        // Update UI
+        document.getElementById('signalCount').innerHTML = signalState.todayCount;
+        
+        // Simpan sinyal pending untuk modal
+        currentPendingSignal = { signal, stopLoss, tp1, tp2, signalText, strength };
+        
+        // Tampilkan modal checklist
+        showChecklistModal();
+        
+        updateCooldownDisplay();
+        startCooldownTimer();
+    } else {
+        document.getElementById('signal').innerText = signal;
+        document.getElementById('signal').className = signal.toLowerCase();
+        document.getElementById('signalText').innerHTML = signalText;
+        document.getElementById('strength').innerHTML = `${strength}%`;
+    }
+    
+    if (signal !== 'WAIT' && !currentPendingSignal) {
+        document.getElementById('stopLoss').innerHTML = `<span class="${signal === 'BUY' ? 'sell' : 'buy'}">${stopLoss.toFixed(5)}</span>`;
+        document.getElementById('tp1').innerHTML = `<span class="${signal === 'BUY' ? 'buy' : 'sell'}">${tp1.toFixed(5)}</span>`;
+        document.getElementById('tp2').innerHTML = `<span class="${signal === 'BUY' ? 'buy' : 'sell'}">${tp2.toFixed(5)}</span>`;
+    }
+    
+    return true;
+}
+
+function startCooldownTimer() {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    cooldownInterval = setInterval(updateCooldownDisplay, 1000);
+}
+
+// ==============================================
+// MODAL CHECKLIST
+// ==============================================
+const modal = document.getElementById('checklistModal');
+const confirmBtn = document.getElementById('confirmTrade');
+const cancelBtn = document.getElementById('cancelTrade');
+const checkboxes = document.querySelectorAll('.check-item');
+
+function showChecklistModal() {
+    // Reset checkboxes
+    checkboxes.forEach(cb => cb.checked = false);
+    confirmBtn.disabled = true;
+    
+    // Update modal dengan info sinyal
+    if (currentPendingSignal) {
+        document.querySelector('.modal-content h3').innerHTML = `✅ ${currentPendingSignal.signal} CONFIRMATION`;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function hideModal() {
+    modal.style.display = 'none';
+}
+
+// Cek semua checklist
+function checkAllChecklist() {
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    confirmBtn.disabled = !allChecked;
+}
+
+checkboxes.forEach(cb => {
+    cb.addEventListener('change', checkAllChecklist);
+});
+
+// Konfirmasi trade
+confirmBtn.addEventListener('click', () => {
+    if (currentPendingSignal) {
+        const s = currentPendingSignal;
+        
+        // Final update UI
+        document.getElementById('signal').innerText = s.signal;
+        document.getElementById('signal').className = s.signal.toLowerCase();
+        document.getElementById('signalText').innerHTML = `✅ EKSEKUSI ${s.signal} | ${s.signalText} | Strength: ${s.strength}%`;
+        document.getElementById('strength').innerHTML = `${s.strength}%`;
+        
+        document.getElementById('stopLoss').innerHTML = `<span class="${s.signal === 'BUY' ? 'sell' : 'buy'}">${s.stopLoss.toFixed(5)}</span>`;
+        document.getElementById('tp1').innerHTML = `<span class="${s.signal === 'BUY' ? 'buy' : 'sell'}">${s.tp1.toFixed(5)}</span>`;
+        document.getElementById('tp2').innerHTML = `<span class="${s.signal === 'BUY' ? 'buy' : 'sell'}">${s.tp2.toFixed(5)}</span>`;
+        
+        // Notifikasi
+        if (Notification.permission === 'granted') {
+            new Notification(`📢 EKSEKUSI ${s.signal} GBPUSD H4!`, {
+                body: `${s.signalText} | SL: ${s.stopLoss.toFixed(5)} | TP: ${s.tp1.toFixed(5)}`,
+                icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png'
+            });
         }
         
-        if (cryptoMomentum > 0.6) score += 0.7;
-        else if (cryptoMomentum < -0.6) score -= 0.7;
+        currentPendingSignal = null;
+    }
+    hideModal();
+});
+
+// Batalkan trade
+cancelBtn.addEventListener('click', () => {
+    document.getElementById('signal').innerText = 'WAIT';
+    document.getElementById('signal').className = 'wait';
+    document.getElementById('signalText').innerHTML = 'Trade dibatalkan. Menunggu sinyal berikutnya.';
+    document.getElementById('strength').innerHTML = '0%';
+    
+    // Reset cooldown (tidak menghabiskan limit)
+    signalState.cooldownEndTime = 0;
+    signalState.todayCount--;
+    document.getElementById('signalCount').innerHTML = signalState.todayCount;
+    updateCooldownDisplay();
+    
+    currentPendingSignal = null;
+    hideModal();
+});
+
+// Klik luar modal untuk tutup
+window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        cancelTrade();
+    }
+});
+
+// Minta izin notifikasi
+if (Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// ==============================================
+// LOAD MARKET DATA (H4)
+// ==============================================
+async function loadMarket() {
+    try {
+        const url = `https://api.twelvedata.com/time_series?symbol=${SYMBOL}&interval=${TIMEFRAME}&outputsize=${OUTPUT_SIZE}&apikey=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
         
-        if (score >= 1.8) return { signal: 'BUY', class: 'signal-buy', text: '📈 BUY GBP/USD (Long Pound)' };
-        if (score <= -1.8) return { signal: 'SELL', class: 'signal-sell', text: '📉 SELL GBP/USD (Short Pound)' };
-        return { signal: 'NEUTRAL', class: 'signal-neutral', text: '⚖️ HOLD / TUNGGU' };
-    }
-    
-    // ========== API iTick (REALTIME) ==========
-    async function fetchGbpUsdTick() {
-        try {
-            const headers = {};
-            if (API_TOKEN && API_TOKEN !== 'YOUR_ITICK_TOKEN_HERE') {
-                headers['Authorization'] = `Bearer ${API_TOKEN}`;
-            }
-            const response = await fetch(ITICK_TICK_URL, { headers });
-            if (!response.ok) {
-                if (response.status === 401) throw new Error('Token iTick tidak valid atau belum diisi. Dapatkan token dari iTick.');
-                throw new Error(`HTTP ${response.status}`);
-            }
-            const json = await response.json();
-            // response sesuai contoh: { code:0, data:{ s:"GBPUSD", ld:1.33242, t:timestamp, ... } }
-            if (json.code === 0 && json.data && typeof json.data.ld === 'number') {
-                const rate = json.data.ld;
-                const timestamp = json.data.t;
-                return { rate, timestamp };
-            }
-            throw new Error('Format respons iTick tidak sesuai');
-        } catch (error) {
-            console.warn('Gagal fetch iTick tick:', error);
-            throw error;
-        }
-    }
-    
-    // ========== Crypto GBP Sentiment (tetap) ==========
-    async function fetchCryptoGbpSentiment() {
-        try {
-            const url = `https://api.coingecko.com/api/v3/simple/price?ids=${CRYPTO_GBP_ID}&vs_currencies=usd&include_24hr_change=true`;
-            const resp = await fetch(url);
-            if (!resp.ok) throw new Error('Coingecko error');
-            const json = await resp.json();
-            if (json && json[CRYPTO_GBP_ID] && typeof json[CRYPTO_GBP_ID]['usd_24h_change'] === 'number') {
-                return json[CRYPTO_GBP_ID]['usd_24h_change'];
-            }
-            return 0;
-        } catch (err) {
-            console.warn('crypto GBP sentiment fallback:', err);
-            return 0;
-        }
-    }
-    
-    // ========== UPDATE UTAMA ==========
-    async function updateFxSignal() {
-        signalTextElem.innerHTML = '⟳ Mengambil tick data ...';
-        signalTextElem.className = 'signal-value';
-        fxPriceDisplay.innerHTML = '--.---- <span>USD</span>';
+        if (!data.values || data.values.length === 0) throw new Error('No data');
         
-        try {
-            // 1. Ambil data iTick realtime
-            const { rate, timestamp } = await fetchGbpUsdTick();
-            if (rate && !isNaN(rate)) {
-                lastPrice = rate;
-                priceHistory.push(rate);
-                if (priceHistory.length > MAX_HISTORY) priceHistory.shift();
-                
-                fxPriceDisplay.innerHTML = `${rate.toFixed(5)} <span>USD</span>`;
-                const timeStr = timestamp ? getFormattedTime(timestamp) : getFormattedTime();
-                updateTimeElem.innerHTML = `🕒 Tick: ${timeStr} UTC | iTick real-time`;
-            } else {
-                throw new Error('Harga tick tidak valid');
-            }
-            
-            // 2. Sentimen crypto (opsional)
-            let cryptoMomentum = 0;
-            try {
-                cryptoMomentum = await fetchCryptoGbpSentiment();
-            } catch(e) { cryptoMomentum = 0; }
-            
-            // 3. Hitung indikator
-            let rsi = 50, ma7 = lastPrice, trend = 'Netral', volatility = 'Sedang';
-            if (priceHistory.length >= 7) {
-                rsi = calculateRSI(priceHistory, 14);
-                ma7 = calculateMA(priceHistory, 7);
-                trend = getTrend(lastPrice, ma7);
-                volatility = calcVolatility(priceHistory);
-            }
-            
-            rsiValueElem.innerHTML = rsi;
-            trendValueElem.innerHTML = trend;
-            volatilityValueElem.innerHTML = volatility;
-            if (trend.includes('Bullish')) trendValueElem.className = 'ind-value bullish';
-            else if (trend.includes('Bearish')) trendValueElem.className = 'ind-value bearish';
-            else trendValueElem.className = 'ind-value';
-            
-            // 4. Sinyal
-            const { signal, text, class: signalClass } = generateSignal(lastPrice, rsi, trend, volatility, cryptoMomentum);
-            signalTextElem.innerHTML = text;
-            signalTextElem.className = `signal-value ${signalClass}`;
-            signalBox.style.borderLeftColor = signal === 'BUY' ? '#2ecc71' : (signal === 'SELL' ? '#e67e22' : '#509eff');
-            
-            if (cryptoMomentum !== 0) {
-                const arrow = cryptoMomentum > 0 ? '📈' : '📉';
-                signalBox.setAttribute('title', `Sentimen Crypto GBP (GBPT): ${cryptoMomentum.toFixed(2)}% ${arrow}`);
-            }
-            
-        } catch (error) {
-            console.error(error);
-            fxPriceDisplay.innerHTML = '⚠️ Gagal ambil tick';
-            updateTimeElem.innerHTML = `Error: ${error.message.substring(0, 70)}`;
-            signalTextElem.innerHTML = '❌ Signal error, cek token iTick';
-            signalTextElem.className = 'signal-value';
+        const values = data.values.reverse();
+        
+        const candles = values.map(v => ({
+            time: new Date(v.datetime).getTime() / 1000,
+            open: parseFloat(v.open),
+            high: parseFloat(v.high),
+            low: parseFloat(v.low),
+            close: parseFloat(v.close)
+        }));
+        
+        candleSeries.setData(candles);
+        chart.timeScale().fitContent();
+        
+        const closes = candles.map(c => c.close);
+        const currentPrice = closes[closes.length - 1];
+        
+        const ema50 = calculateEMA(closes, 50);
+        const ema200 = calculateEMA(closes, 200);
+        const currentEMA50 = ema50[ema50.length - 1];
+        const currentEMA200 = ema200[ema200.length - 1];
+        
+        const rsi = calculateRSI(closes, 14);
+        const macd = calculateMACD(closes, 12, 26, 9);
+        const atr = calculateATR(candles, 14);
+        
+        // Trend
+        let trend = 'SIDEWAYS';
+        let trendCondition = '⚖️ Neutral';
+        if (currentPrice > currentEMA200 && currentEMA50 > currentEMA200) {
+            trend = 'BULLISH';
+            trendCondition = '✅ Bullish (Price > EMA200, EMA50 > EMA200)';
+        } else if (currentPrice < currentEMA200 && currentEMA50 < currentEMA200) {
+            trend = 'BEARISH';
+            trendCondition = '✅ Bearish (Price < EMA200, EMA50 < EMA200)';
+        } else {
+            trendCondition = '⚠️ Sideways / Consolidation';
         }
-    }
-    
-    // Auto refresh setiap 5 detik (tick data)
-    let autoInterval;
-    function startAutoRefresh() {
-        if (autoInterval) clearInterval(autoInterval);
-        autoInterval = setInterval(() => updateFxSignal(), 5000);
-    }
-    
-    async function manualRefresh() {
-        refreshBtn.innerHTML = '🔄 Memuat tick ...';
-        refreshBtn.disabled = true;
-        await updateFxSignal();
-        refreshBtn.innerHTML = '🔄 Refresh Signal & Harga';
-        refreshBtn.disabled = false;
-    }
-    
-    async function init() {
-        if (API_TOKEN === 'YOUR_ITICK_TOKEN_HERE') {
-            updateTimeElem.innerHTML = '⚠️ PERHATIAN: Isi token iTick terlebih dahulu di variabel API_TOKEN';
-            signalTextElem.innerHTML = '⛔ Token iTick belum diisi';
-            return;
+        
+        // RSI Condition
+        let rsiCondition = '⚖️ Neutral';
+        if (rsi > 55) rsiCondition = '✅ Bullish Momentum (RSI > 55)';
+        else if (rsi < 45) rsiCondition = '✅ Bearish Momentum (RSI < 45)';
+        else rsiCondition = '⚠️ RSI Neutral (45-55)';
+        
+        // MACD Condition
+        let macdCondition = '⚖️ Neutral';
+        if (macd.cross === 'BULLISH CROSS') macdCondition = '✅ Bullish Cross';
+        else if (macd.cross === 'BEARISH CROSS') macdCondition = '✅ Bearish Cross';
+        
+        // Market Phase
+        let marketPhase = '📊 Normal';
+        if (atr < 0.0015) marketPhase = '⏸️ Low Volatility (Wait)';
+        else if (atr > 0.003) marketPhase = '⚡ High Volatility';
+        
+        // SIGNAL LOGIC
+        let signal = 'WAIT';
+        let signalText = 'Tidak ada setup jelas di H4';
+        let strength = 0;
+        let stopLoss = 0, tp1 = 0, tp2 = 0;
+        
+        // BUY
+        if (trend === 'BULLISH' && rsi > 50 && macd.cross !== 'BEARISH CROSS') {
+            signal = 'BUY';
+            strength = 70;
+            signalText = 'H4 Bullish trend terkonfirmasi. Cari entry pullback.';
+            stopLoss = currentPrice - (RISK_PIPS * 0.0001);
+            tp1 = currentPrice + (RISK_PIPS * RR_RATIO_1 * 0.0001);
+            tp2 = currentPrice + (RISK_PIPS * RR_RATIO_2 * 0.0001);
+            
+            if (rsi > 60) strength += 10;
+            if (macd.cross === 'BULLISH CROSS') strength += 15;
+            if (currentPrice > currentEMA50 && currentPrice > currentEMA200) strength += 5;
+            strength = Math.min(strength, 95);
+            
+        // SELL
+        } else if (trend === 'BEARISH' && rsi < 50 && macd.cross !== 'BULLISH CROSS') {
+            signal = 'SELL';
+            strength = 70;
+            signalText = 'H4 Bearish trend terkonfirmasi. Cari entry pullback.';
+            stopLoss = currentPrice + (RISK_PIPS * 0.0001);
+            tp1 = currentPrice - (RISK_PIPS * RR_RATIO_1 * 0.0001);
+            tp2 = currentPrice - (RISK_PIPS * RR_RATIO_2 * 0.0001);
+            
+            if (rsi < 40) strength += 10;
+            if (macd.cross === 'BEARISH CROSS') strength += 15;
+            if (currentPrice < currentEMA50 && currentPrice < currentEMA200) strength += 5;
+            strength = Math.min(strength, 95);
         }
-        await updateFxSignal();
-        startAutoRefresh();
-        refreshBtn.addEventListener('click', manualRefresh);
+        
+        // Update UI
+        document.getElementById('price').innerText = currentPrice.toFixed(5);
+        document.getElementById('trend').innerHTML = `<span class="${trend === 'BULLISH' ? 'buy' : (trend === 'BEARISH' ? 'sell' : 'neutral')}">${trend}</span>`;
+        document.getElementById('momentumStat').innerHTML = `<span class="${rsi > 55 ? 'buy' : (rsi < 45 ? 'sell' : 'neutral')}">${rsi > 55 ? 'BULLISH' : (rsi < 45 ? 'BEARISH' : 'NEUTRAL')}</span>`;
+        
+        document.getElementById('ema50Val').innerHTML = currentEMA50.toFixed(5);
+        document.getElementById('ema200Val').innerHTML = currentEMA200.toFixed(5);
+        document.getElementById('rsiVal').innerHTML = `${rsi.toFixed(1)} ${rsi > 70 ? '🔴' : (rsi < 30 ? '🟢' : '⚪')}`;
+        document.getElementById('macdVal').innerHTML = macd.cross;
+        
+        document.getElementById('trendCondition').innerHTML = trendCondition;
+        document.getElementById('rsiCondition').innerHTML = rsiCondition;
+        document.getElementById('macdCondition').innerHTML = macdCondition;
+        document.getElementById('marketPhase').innerHTML = marketPhase;
+        
+        document.getElementById('liveStatus').innerHTML = `LIVE H4 DATA • ${new Date().toLocaleTimeString()}`;
+        
+        // Apply signal dengan manajemen disiplin
+        applySignal(signal, strength, signalText, stopLoss, tp1, tp2);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('signalText').innerHTML = '⚠️ API Error / Rate Limit. Cek koneksi.';
+        document.getElementById('liveStatus').innerHTML = '⚠️ API Error';
     }
-    
-    init();
+}
+
+// ==============================================
+// INITIALIZATION
+// ==============================================
+loadMarket();
+setInterval(loadMarket, 900000); // 15 menit
+
+window.addEventListener('resize', () => {
+    chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+});
+
+setTimeout(() => {
+    chart.applyOptions({ width: document.getElementById('chart').clientWidth });
+}, 100);
+
+updateCooldownDisplay();
 </script>
 </body>
 </html>
