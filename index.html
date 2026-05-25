@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>SMC Pro | Multi-Timeframe Analysis · H4 Utama · Real API</title>
+  <!-- EmailJS Library -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -22,7 +24,6 @@
       margin: 0 auto;
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 1.5rem;
@@ -52,7 +53,6 @@
       margin-left: 0.5rem;
     }
 
-    /* Timeframe Selector */
     .tf-selector {
       display: flex;
       gap: 0.5rem;
@@ -86,14 +86,12 @@
       border-color: #cbd5e1;
     }
 
-    /* Main Grid */
     .dashboard {
       display: grid;
       grid-template-columns: 1fr 340px;
       gap: 1.2rem;
     }
 
-    /* Panel Kiri */
     .main-panel {
       background: #ffffff;
       border-radius: 1.5rem;
@@ -102,7 +100,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
 
-    /* H4 Dominant Signal */
     .dominant-signal {
       background: linear-gradient(135deg, #f8fafc, #ffffff);
       border-radius: 1.2rem;
@@ -158,7 +155,6 @@
     .final-signal.sell .signal-badge-large { color: #dc2626; }
     .final-signal.wait .signal-badge-large { color: #d97706; }
 
-    /* Price Row */
     .price-row {
       display: flex;
       justify-content: space-between;
@@ -179,7 +175,6 @@
       color: #0f172a;
     }
 
-    /* Chart */
     .chart-container {
       background: #ffffff;
       border-radius: 1rem;
@@ -195,7 +190,6 @@
       border-radius: 0.8rem;
     }
 
-    /* Controls */
     .controls {
       display: flex;
       gap: 0.8rem;
@@ -230,7 +224,6 @@
       background: #f1f5f9;
     }
 
-    /* Right Panel */
     .right-panel {
       display: flex;
       flex-direction: column;
@@ -317,6 +310,24 @@
       color: #64748b;
     }
 
+    .signal-timestamp {
+      font-size: 0.7rem;
+      color: #475569;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    .sl-tp {
+      background: #f1f5f9;
+      border-radius: 0.5rem;
+      padding: 0.4rem;
+      margin-top: 0.5rem;
+      font-size: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
     footer {
       text-align: center;
       margin-top: 1.5rem;
@@ -345,7 +356,6 @@
     <p><span class="api-badge">🔑 API Key: Personal · GBP/USD Real</span></p>
   </div>
 
-  <!-- Timeframe Selector untuk chart visual -->
   <div class="tf-selector">
     <button class="tf-btn" data-tf="M5">M5</button>
     <button class="tf-btn" data-tf="M15">M15</button>
@@ -355,9 +365,7 @@
   </div>
 
   <div class="dashboard">
-    <!-- Panel Kiri -->
     <div class="main-panel">
-      <!-- H4 Dominant Signal -->
       <div class="dominant-signal">
         <h3>📊 STRUKTUR UTAMA · H4 (NOISE MINIMAL)</h3>
         <div>
@@ -366,10 +374,11 @@
         <div id="finalSignalBox" class="final-signal wait">
           <div class="signal-badge-large" id="finalSignalText">WAIT</div>
           <div id="finalSignalReason" style="font-size:0.7rem; margin-top:0.3rem; color:#475569;">Menunggu data H4...</div>
+          <div id="signalTimestamp" class="signal-timestamp">⏰ Waktu sinyal: --</div>
+          <div id="slTpInfo" class="sl-tp">📊 SL: -- | TP: --</div>
         </div>
       </div>
 
-      <!-- Harga & Chart -->
       <div class="price-row">
         <div>
           <div style="font-size:0.65rem; color:#64748b;">GBP/USD · <span id="currentTFLabel">H4</span></div>
@@ -391,7 +400,6 @@
       </div>
     </div>
 
-    <!-- Panel Kanan: Multi-TF Analysis -->
     <div class="right-panel">
       <div class="card">
         <h3>🎯 MULTI-TIMEFRAME SMC</h3>
@@ -438,17 +446,29 @@
   </div>
   <footer>
     ⚠️ Data real-time dari Twelve Data menggunakan API Key pribadi. H4 sebagai struktur utama untuk filter noise.
-    Sinyal membutuhkan konfirmasi dari minimal 2 lower TF.
+    Sinyal membutuhkan konfirmasi dari minimal 2 lower TF. Email notifikasi akan dikirim otomatis saat sinyal BUY/SELL.
   </footer>
 </div>
 
 <script>
   // ============================================
-  // KONFIGURASI MULTI-TIMEFRAME DENGAN API KEY ANDA
+  // KONFIGURASI
   // ============================================
   const API_KEY = "8cd5e84fa4564322b907aaddac29b059";
   const SYMBOL = "GBP/USD";
   const OUTPUT_SIZE = 250;
+  
+  // ============================================
+  // KONFIGURASI EMAILJS - SUDAH DIISI DENGAN DATA ANDA
+  // ============================================
+  // !! YANG PERLU DIGANTI: "YOUR_EMAILJS_PUBLIC_KEY" dengan Public Key dari Account EmailJS !!
+  (function() {
+    emailjs.init("4-0tjKBy6KyHoCyOL"); // GANTI DENGAN PUBLIC KEY ANDA DARI MENU ACCOUNT
+  })();
+  
+  const EMAIL_TO = "umarsaid.radiografer@gmail.com";
+  const EMAIL_SERVICE_ID = "service_ple8ixo";     // Service ID Anda
+  const EMAIL_TEMPLATE_ID = "template_c9od1yf";   // Template ID Anda
   
   const TIMEFRAMES = {
     M5: { interval: '5min', label: 'M5', priority: 1, weight: 0.3, outputsize: 100 },
@@ -458,7 +478,6 @@
     H4: { interval: '4h', label: 'H4', priority: 5, weight: 1.0, outputsize: OUTPUT_SIZE }
   };
 
-  // Data storage per timeframe
   let tfData = {
     M5: { prices: [], signal: null },
     M15: { prices: [], signal: null },
@@ -471,9 +490,58 @@
   let chartCtx = null;
   let canvas = null;
   let isLoading = false;
+  let lastSignalSent = { signal: null, timestamp: null };
 
   // ============================================
-  // FETCH DATA UNTUK SATU TIMEFRAME
+  // PERHITUNGAN SL/TP (ATR-based)
+  // ============================================
+  function calculateSLTP(price, signal, prices) {
+    if (!prices || prices.length < 20) return { sl: null, tp: null };
+    let atrSum = 0;
+    for (let i = prices.length - 20; i < prices.length - 1; i++) {
+      if (i >= 1) atrSum += Math.abs(prices[i] - prices[i-1]);
+    }
+    let atr = atrSum / 19;
+    let atrValue = atr || 0.002;
+    
+    if (signal === 'BUY') {
+      let sl = price - (atrValue * 1.5);
+      let tp = price + (atrValue * 2.5);
+      return { sl: sl.toFixed(5), tp: tp.toFixed(5), risk: (atrValue * 1.5).toFixed(5) };
+    } else if (signal === 'SELL') {
+      let sl = price + (atrValue * 1.5);
+      let tp = price - (atrValue * 2.5);
+      return { sl: sl.toFixed(5), tp: tp.toFixed(5), risk: (atrValue * 1.5).toFixed(5) };
+    }
+    return { sl: null, tp: null };
+  }
+
+  // ============================================
+  // KIRIM EMAIL
+  // ============================================
+  async function sendEmailNotification(signal, reason, price, sl, tp, timestamp) {
+    const templateParams = {
+      to_email: EMAIL_TO,
+      signal_type: signal,
+      entry_price: price,
+      stop_loss: sl,
+      take_profit: tp,
+      timestamp: timestamp,
+      message: reason
+    };
+    
+    try {
+      const response = await emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, templateParams);
+      console.log("Email terkirim!", response);
+      return true;
+    } catch (error) {
+      console.error("Gagal kirim email:", error);
+      return false;
+    }
+  }
+
+  // ============================================
+  // FETCH DATA
   // ============================================
   async function fetchTF(tfKey) {
     const config = TIMEFRAMES[tfKey];
@@ -487,7 +555,7 @@
       if (json && json.values && json.values.length > 10) {
         const closes = json.values.map(c => parseFloat(c.close)).filter(v => !isNaN(v));
         if (closes.length > 0) {
-          tfData[tfKey].prices = closes.reverse(); // oldest → newest
+          tfData[tfKey].prices = closes.reverse();
           return true;
         }
       }
@@ -498,18 +566,14 @@
     }
   }
 
-  // ============================================
-  // FETCH SEMUA TIMEFRAME
-  // ============================================
   async function fetchAllTimeframes() {
     if (isLoading) return;
     isLoading = true;
     
-    // Tampilkan loading indicator
     document.getElementById('tfAnalysisList').innerHTML = '<div class="loading">⏳ Mengambil data dari API Twelve Data...</div>';
     
-    const results = await Promise.all([
-      fetchTF('H4'),  // H4 priority first
+    await Promise.all([
+      fetchTF('H4'),
       fetchTF('H1'),
       fetchTF('M30'),
       fetchTF('M15'),
@@ -524,7 +588,7 @@
   }
 
   // ============================================
-  // SMC LOGIC (Enhanced)
+  // SMC LOGIC
   // ============================================
   function analyzeSMC(prices) {
     if (!prices || prices.length < 20) return { trend: 'NETRAL', signal: 'WAIT', score: 0 };
@@ -549,12 +613,10 @@
     let prevLow = lows.length > 1 ? lows[lows.length-2].val : lastLow;
     let current = prices[prices.length-1];
     
-    // Structure break detection
     let bullish = (lastLow > prevLow && current > lastHigh);
     let bearish = (lastHigh < prevHigh && current < lastLow);
     let trend = bullish ? 'BULLISH' : (bearish ? 'BEARISH' : 'NETRAL');
     
-    // BOS (Break of Structure)
     let bos = false;
     let bosType = '';
     if (bullish && current > lastHigh && lastHigh > prevHigh) {
@@ -566,18 +628,15 @@
       bosType = 'BEARISH BOS';
     }
     
-    // Liquidity Grab (Stop Hunt)
     let prev = prices[prices.length-2];
     let liqHigh = (prev < lastHigh && current >= lastHigh + 0.00005);
     let liqLow = (prev > lastLow && current <= lastLow - 0.00005);
     let liqGrab = liqHigh || liqLow;
     
-    // Order Block & FVG
     let change = current - (prices[prices.length-2] || current);
     let obActive = (trend === 'BULLISH' && change > 0.0002) || (trend === 'BEARISH' && change < -0.0002);
     let fvgActive = Math.abs(change) > 0.0003;
     
-    // Score calculation
     let score = 0;
     if (trend === 'BULLISH') score += 2;
     if (bos) score += 1.5;
@@ -608,7 +667,7 @@
   }
 
   // ============================================
-  // FINAL SIGNAL BERDASARKAN H4 + KONFIRMASI
+  // FINAL SIGNAL
   // ============================================
   function getFinalSignal() {
     const h4 = tfData.H4.signal;
@@ -663,13 +722,15 @@
   }
 
   // ============================================
-  // UI UPDATE
+  // UI UPDATE + EMAIL TRIGGER
   // ============================================
-  function updateUI() {
+  async function updateUI() {
     const h4Sig = tfData.H4.signal;
     const final = getFinalSignal();
+    const currentPriceNum = tfData.H4.prices && tfData.H4.prices.length ? tfData.H4.prices[tfData.H4.prices.length-1] : 1.0;
+    const now = new Date();
+    const timestampStr = now.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', hour12: false });
     
-    // H4 Trend Label
     if (h4Sig) {
       const h4TrendElem = document.getElementById('h4TrendLabel');
       h4TrendElem.className = `h4-trend ${h4Sig.trend.toLowerCase()}`;
@@ -677,13 +738,37 @@
                               (h4Sig.trend === 'BEARISH' ? '📉 BEARISH (H4)' : '⏸️ NETRAL (H4)');
     }
     
-    // Final Signal Box
+    let sltp = { sl: null, tp: null };
+    if (final.signal !== 'WAIT' && tfData.H4.prices) {
+      sltp = calculateSLTP(currentPriceNum, final.signal, tfData.H4.prices);
+    }
+    
     const finalBox = document.getElementById('finalSignalBox');
     finalBox.className = `final-signal ${final.signal.toLowerCase()}`;
     document.getElementById('finalSignalText').innerText = final.signal;
     document.getElementById('finalSignalReason').innerHTML = final.reason;
+    document.getElementById('signalTimestamp').innerHTML = `⏰ Waktu sinyal: ${timestampStr}`;
+    if (sltp.sl && sltp.tp) {
+      document.getElementById('slTpInfo').innerHTML = `📊 Stop Loss: ${sltp.sl} | Take Profit: ${sltp.tp} | Risk 1:1.67`;
+    } else {
+      document.getElementById('slTpInfo').innerHTML = `📊 SL: -- | TP: -- (tunggu sinyal valid)`;
+    }
     
-    // H4 Details
+    // KIRIM EMAIL SAAT SINYAL BERUBAH
+    if ((final.signal === 'BUY' || final.signal === 'SELL') && lastSignalSent.signal !== final.signal) {
+      lastSignalSent.signal = final.signal;
+      lastSignalSent.timestamp = timestampStr;
+      
+      await sendEmailNotification(
+        final.signal, 
+        final.reason, 
+        currentPriceNum.toFixed(5), 
+        sltp.sl || 'N/A', 
+        sltp.tp || 'N/A', 
+        timestampStr
+      );
+    }
+    
     if (h4Sig) {
       document.getElementById('h4Trend').innerHTML = h4Sig.trend;
       document.getElementById('h4BOS').innerHTML = h4Sig.bos ? `✓ ${h4Sig.bosType}` : 'Tidak ada';
@@ -692,7 +777,6 @@
       document.getElementById('h4FVG').innerHTML = h4Sig.fvgActive ? 'Ada' : 'Tidak ada';
     }
     
-    // Multi-TF Analysis List
     const tfListHtml = [];
     const order = ['H4', 'H1', 'M30', 'M15', 'M5'];
     for (let tf of order) {
@@ -725,16 +809,15 @@
       document.getElementById('tfAnalysisList').innerHTML = tfListHtml.join('');
     }
     
-    // Current price & timestamp
     if (tfData.H4.prices && tfData.H4.prices.length) {
       document.getElementById('currentPrice').innerText = tfData.H4.prices[tfData.H4.prices.length-1].toFixed(5);
     }
-    document.getElementById('updateTime').innerHTML = new Date().toLocaleTimeString();
+    document.getElementById('updateTime').innerHTML = timestampStr;
     document.getElementById('currentTFLabel').innerHTML = currentChartTF;
   }
 
   // ============================================
-  // CHART DRAWING
+  // CHART
   // ============================================
   function drawChart() {
     const prices = tfData[currentChartTF]?.prices;
@@ -752,7 +835,6 @@
     const yScale = (h - 40) / range;
     const xStep = w / (prices.length - 1);
     
-    // Draw grid
     chartCtx.beginPath();
     chartCtx.strokeStyle = '#e2e8f0';
     chartCtx.lineWidth = 0.5;
@@ -764,7 +846,6 @@
       chartCtx.stroke();
     }
     
-    // Draw price line
     chartCtx.beginPath();
     chartCtx.strokeStyle = '#2563eb';
     chartCtx.lineWidth = 2;
@@ -776,7 +857,6 @@
     }
     chartCtx.stroke();
     
-    // Last price dot
     chartCtx.fillStyle = '#f59e0b';
     let lastX = (prices.length-1) * xStep;
     let lastY = h - 20 - (prices[prices.length-1] - minP) * yScale;
@@ -788,7 +868,6 @@
     chartCtx.arc(lastX, lastY, 2, 0, 2 * Math.PI);
     chartCtx.fill();
     
-    // H4 trend annotation
     if (currentChartTF !== 'H4' && tfData.H4.signal) {
       chartCtx.font = '10px Inter, sans-serif';
       chartCtx.fillStyle = '#64748b';
@@ -801,7 +880,7 @@
   // ============================================
   async function refreshAll() {
     analyzeAllTimeframes();
-    updateUI();
+    await updateUI();
     drawChart();
   }
   
@@ -820,7 +899,7 @@
   }
 
   // ============================================
-  // INITIALIZATION
+  // INIT
   // ============================================
   window.onload = async () => {
     canvas = document.getElementById('priceCanvas');
@@ -834,6 +913,10 @@
     });
     
     await fetchAllTimeframes();
+    
+    setInterval(async () => {
+      await fetchAllTimeframes();
+    }, 300000);
     
     window.addEventListener('resize', () => drawChart());
   };
