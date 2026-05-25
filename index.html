@@ -318,6 +318,13 @@
       border-top: 1px dashed #e2e8f0;
     }
 
+    .signal-first-timestamp {
+      font-size: 0.7rem;
+      color: #2563eb;
+      margin-top: 0.3rem;
+      font-weight: 500;
+    }
+
     .sl-tp {
       background: #f1f5f9;
       border-radius: 0.5rem;
@@ -326,6 +333,12 @@
       font-size: 0.7rem;
       display: flex;
       justify-content: space-between;
+    }
+
+    .signal-duration {
+      font-size: 0.65rem;
+      color: #64748b;
+      margin-top: 0.3rem;
     }
 
     footer {
@@ -374,7 +387,9 @@
         <div id="finalSignalBox" class="final-signal wait">
           <div class="signal-badge-large" id="finalSignalText">WAIT</div>
           <div id="finalSignalReason" style="font-size:0.7rem; margin-top:0.3rem; color:#475569;">Menunggu data H4...</div>
-          <div id="signalTimestamp" class="signal-timestamp">⏰ Waktu sinyal: --</div>
+          <div id="signalTimestamp" class="signal-timestamp">⏰ Waktu update terakhir: --</div>
+          <div id="signalFirstTimestamp" class="signal-first-timestamp">🕐 Sinyal pertama kali muncul: --</div>
+          <div id="signalDuration" class="signal-duration">⏱️ Durasi sinyal berjalan: --</div>
           <div id="slTpInfo" class="sl-tp">📊 SL: -- | TP: --</div>
         </div>
       </div>
@@ -463,12 +478,12 @@
   // ============================================
   // !! YANG PERLU DIGANTI: "YOUR_EMAILJS_PUBLIC_KEY" dengan Public Key dari Account EmailJS !!
   (function() {
-    emailjs.init("4-0tjKBy6KyHoCyOL"); // GANTI DENGAN PUBLIC KEY ANDA DARI MENU ACCOUNT
+    emailjs.init("YOUR_EMAILJS_PUBLIC_KEY"); // GANTI DENGAN PUBLIC KEY ANDA DARI MENU ACCOUNT
   })();
   
   const EMAIL_TO = "umarsaid.radiografer@gmail.com";
-  const EMAIL_SERVICE_ID = "service_ple8ixo";     // Service ID Anda
-  const EMAIL_TEMPLATE_ID = "template_c9od1yf";   // Template ID Anda
+  const EMAIL_SERVICE_ID = "service_ple8ixo";
+  const EMAIL_TEMPLATE_ID = "template_c9od1yf";
   
   const TIMEFRAMES = {
     M5: { interval: '5min', label: 'M5', priority: 1, weight: 0.3, outputsize: 100 },
@@ -490,7 +505,10 @@
   let chartCtx = null;
   let canvas = null;
   let isLoading = false;
-  let lastSignalSent = { signal: null, timestamp: null };
+  
+  // VARIABEL UNTUK MEREKAM SINYAL PERTAMA KALI
+  let lastSignalSent = { signal: null, timestamp: null, firstSignalTimestamp: null, firstSignalPrice: null };
+  let currentActiveSignal = { signal: 'WAIT', startTime: null, startPrice: null };
 
   // ============================================
   // PERHITUNGAN SL/TP (ATR-based)
@@ -517,9 +535,27 @@
   }
 
   // ============================================
+  // FORMAT DURASI (HH:MM:SS)
+  // ============================================
+  function formatDuration(ms) {
+    if (!ms) return '--';
+    const seconds = Math.floor(ms / 1000);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) {
+      return `${hours} jam ${minutes} menit ${secs} detik`;
+    } else if (minutes > 0) {
+      return `${minutes} menit ${secs} detik`;
+    } else {
+      return `${secs} detik`;
+    }
+  }
+
+  // ============================================
   // KIRIM EMAIL
   // ============================================
-  async function sendEmailNotification(signal, reason, price, sl, tp, timestamp) {
+  async function sendEmailNotification(signal, reason, price, sl, tp, timestamp, firstTimestamp) {
     const templateParams = {
       to_email: EMAIL_TO,
       signal_type: signal,
@@ -527,7 +563,8 @@
       stop_loss: sl,
       take_profit: tp,
       timestamp: timestamp,
-      message: reason
+      first_signal_time: firstTimestamp || timestamp,
+      message: `${reason}\n\n🕐 Sinyal pertama kali muncul: ${firstTimestamp || timestamp}`
     };
     
     try {
@@ -722,7 +759,7 @@
   }
 
   // ============================================
-  // UI UPDATE + EMAIL TRIGGER
+  // UI UPDATE + EMAIL TRIGGER + FIRST SIGNAL TIME
   // ============================================
   async function updateUI() {
     const h4Sig = tfData.H4.signal;
@@ -743,21 +780,58 @@
       sltp = calculateSLTP(currentPriceNum, final.signal, tfData.H4.prices);
     }
     
+    // LOGIKA PENCATATAN WAKTU SINYAL PERTAMA KALI
+    if (final.signal !== 'WAIT') {
+      // Jika sinyal aktif berbeda dari sebelumnya, atau sebelumnya WAIT, catat waktu mulai
+      if (currentActiveSignal.signal !== final.signal) {
+        currentActiveSignal = {
+          signal: final.signal,
+          startTime: now,
+          startPrice: currentPriceNum,
+          startTimestamp: timestampStr
+        };
+      }
+    } else {
+      // Jika sinyal WAIT, reset catatan sinyal aktif
+      if (currentActiveSignal.signal !== 'WAIT') {
+        currentActiveSignal = { signal: 'WAIT', startTime: null, startPrice: null, startTimestamp: null };
+      }
+    }
+    
+    // Hitung durasi jika sinyal sedang aktif
+    let durationText = '--';
+    if (currentActiveSignal.signal !== 'WAIT' && currentActiveSignal.startTime) {
+      const durationMs = now - currentActiveSignal.startTime;
+      durationText = formatDuration(durationMs);
+    }
+    
+    // Update tampilan waktu sinyal
     const finalBox = document.getElementById('finalSignalBox');
     finalBox.className = `final-signal ${final.signal.toLowerCase()}`;
     document.getElementById('finalSignalText').innerText = final.signal;
     document.getElementById('finalSignalReason').innerHTML = final.reason;
-    document.getElementById('signalTimestamp').innerHTML = `⏰ Waktu sinyal: ${timestampStr}`;
+    document.getElementById('signalTimestamp').innerHTML = `⏰ Waktu update terakhir: ${timestampStr}`;
+    
+    if (currentActiveSignal.signal !== 'WAIT' && currentActiveSignal.startTimestamp) {
+      document.getElementById('signalFirstTimestamp').innerHTML = `🕐 Sinyal ${final.signal} pertama kali muncul: ${currentActiveSignal.startTimestamp}`;
+      document.getElementById('signalDuration').innerHTML = `⏱️ Durasi sinyal berjalan: ${durationText}`;
+    } else {
+      document.getElementById('signalFirstTimestamp').innerHTML = `🕐 Sinyal pertama kali muncul: --`;
+      document.getElementById('signalDuration').innerHTML = `⏱️ Durasi sinyal berjalan: --`;
+    }
+    
     if (sltp.sl && sltp.tp) {
       document.getElementById('slTpInfo').innerHTML = `📊 Stop Loss: ${sltp.sl} | Take Profit: ${sltp.tp} | Risk 1:1.67`;
     } else {
       document.getElementById('slTpInfo').innerHTML = `📊 SL: -- | TP: -- (tunggu sinyal valid)`;
     }
     
-    // KIRIM EMAIL SAAT SINYAL BERUBAH
+    // KIRIM EMAIL SAAT SINYAL BERUBAH (bukan saat refresh)
     if ((final.signal === 'BUY' || final.signal === 'SELL') && lastSignalSent.signal !== final.signal) {
       lastSignalSent.signal = final.signal;
       lastSignalSent.timestamp = timestampStr;
+      lastSignalSent.firstSignalTimestamp = currentActiveSignal.startTimestamp || timestampStr;
+      lastSignalSent.firstSignalPrice = currentActiveSignal.startPrice || currentPriceNum;
       
       await sendEmailNotification(
         final.signal, 
@@ -765,7 +839,8 @@
         currentPriceNum.toFixed(5), 
         sltp.sl || 'N/A', 
         sltp.tp || 'N/A', 
-        timestampStr
+        timestampStr,
+        currentActiveSignal.startTimestamp || timestampStr
       );
     }
     
